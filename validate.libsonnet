@@ -10,6 +10,13 @@ local additionalSchema = function(schema, key, defaultSchema) (
 local validators = {
   local this = self,
 
+  validateConst(value, schema={}, path='$'):: (
+    if schema.const != value then
+      error error '`%s` should be const %s, but got `%s`' % [path, schema.const, value]
+    else
+      value
+  ),
+
   validateEnum(value, schema={}, path='$'):: (
     if !std.member(schema.enum, value) then
       error error '`%s` should be one value of %s, but got `%s`' % [path, schema.enum, value]
@@ -118,6 +125,8 @@ local validators = {
       this.validate(value, { type: std.type(value) }, path)
     else if schema.type != std.type(value) then
       error '`%s` should be %s value, but got %s value' % [path, schema.type, std.type(value)]
+    else if std.objectHasAll(schema, 'const') then
+      this.validateConst(value, schema, path)
     else if std.objectHasAll(schema, 'enum') then
       this.validateEnum(value, schema, path)
     else if schema.type == 'object' then
