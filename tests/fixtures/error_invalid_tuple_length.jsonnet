@@ -2,7 +2,7 @@ local Meta = {
   __schema__:: {
     type: 'object',
     properties: {
-      array: {
+      tuple: {
         type: 'array',
         items: [
           { type: 'string' },
@@ -14,5 +14,5 @@ local Meta = {
 };
 
 Meta {
-  array: [1, 1, 'x'],
+  tuple: [1, 1, 'x'],
 }

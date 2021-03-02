@@ -30,7 +30,7 @@ local Meta = t.objectOf({
 });
 
 t.validate(Meta {
-  name: 1,  // should throw error like `$.name` should be a string value, but got number value
+  name: 1,  // should throw error like `$.name` should be a string value
   age: 18,
 })
 ```

@@ -8,7 +8,5 @@ local Meta = {
 };
 
 Meta {
-  labels: {
-    type: 'C',
-  },
+  type: 'C',
 }
