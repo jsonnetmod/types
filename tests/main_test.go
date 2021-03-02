@@ -35,6 +35,8 @@ func Test(t *testing.T) {
 					t.Logf(ret)
 					t.Fatal(name)
 				} else {
+					fmt.Println(err.Error())
+
 					if !strings.HasPrefix(err.Error(), "RUNTIME ERROR: `$") {
 						t.Fatal(err)
 					}

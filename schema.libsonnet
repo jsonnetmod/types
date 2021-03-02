@@ -36,6 +36,8 @@ local typeOf = function(schema) { [v.schemaField]:: schema } + getDefaultsFromSc
 
   typeOf:: typeOf,
 
+  any():: {},
+
   const(c):: typeOf({
     type: std.type(c),
     const: c,
@@ -59,11 +61,13 @@ local typeOf = function(schema) { [v.schemaField]:: schema } + getDefaultsFromSc
 
   number():: typeOf({ type: 'number' }),
 
+  integer():: typeOf({ type: 'integer' }),
+
   boolean():: typeOf({ type: 'boolean' }),
 
   tupleOf(itemSchemas):: typeOf(
     if !std.isArray(itemSchemas) then
-      error 'itemSchemas must be an array'
+      error 'tupleOf(itemSchemas), itemSchemas must be an array'
     else
       {
         type: 'array',
@@ -71,10 +75,20 @@ local typeOf = function(schema) { [v.schemaField]:: schema } + getDefaultsFromSc
       }
   ),
 
+  oneOf(schemas):: typeOf(
+    if !std.isArray(schemas) then
+      error 'oneOf(schemas), schemas must be an array'
+    else
+      {
+        oneOf: std.map(function(s) normalizeSchema(s), schemas),
+      }
+  ),
+
   arrayOf(itemSchema):: typeOf({
     type: 'array',
     items: normalizeSchema(itemSchema),
   }),
+
 
   objectOf(properties, additionalSchema=false):: typeOf({
     type: 'object',
