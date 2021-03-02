@@ -1,5 +1,7 @@
 # Types
 
+ALPHA VERSION, APIs may changes.
+
 A [jsonnet](https://jsonnet.org/) validation follow [json schema](https://json-schema.org/) .
 
 ## Rule
@@ -32,3 +34,4 @@ t.validate(Meta {
   age: 18,
 })
 ```
+
