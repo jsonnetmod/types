@@ -12,7 +12,8 @@ import (
 )
 
 func Test(t *testing.T) {
-	_ = format("../t.libsonnet")
+	_ = format("../schema.libsonnet")
+	_ = format("../validate.libsonnet")
 
 	files, err := filepath.Glob("./fixtures/*.jsonnet")
 	if err != nil {

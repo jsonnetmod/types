@@ -1,6 +1,6 @@
 local Meta = {
   a: {
-    b: {
+    b:: {
       c: {
         __schema__:: {
           type: 'object',
@@ -8,6 +8,7 @@ local Meta = {
             d: { type: 'string' },
           },
         },
+        d: 'string',
       },
     },
   },
@@ -15,7 +16,7 @@ local Meta = {
 
 Meta {
   a+: {
-    b+: {
+    b+:: {
       c+: {
         d: 1,
       },
