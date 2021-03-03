@@ -1,9 +1,10 @@
 package cases
 
 import (
-	. "github.com/onsi/gomega"
 	"path/filepath"
 	"testing"
+
+	. "github.com/onsi/gomega"
 )
 
 func TestSchema(t *testing.T) {

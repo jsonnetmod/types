@@ -7,7 +7,6 @@ import (
 	"github.com/onsi/gomega/matchers"
 	"github.com/onsi/gomega/types"
 	"os"
-	"strings"
 )
 
 var libRoot = "../../"
@@ -47,7 +46,13 @@ func format(filename string) error {
 
 func EqualJSON(expect string) types.GomegaMatcher {
 	m := &equalJSONMatcher{}
-	if err := json.Unmarshal([]byte(strings.TrimSpace(expect)), &m.Expected); err != nil {
+
+	data, err := eval(expect)
+	if err != nil {
+		panic(err)
+	}
+
+	if err := json.Unmarshal([]byte(data), &m.Expected); err != nil {
 		panic(err)
 	}
 	return m
