@@ -22,8 +22,10 @@ local errMsgWithPath = function(errMsg, path='$') (
   else '`%s` %s' % [path, errMsg]
 );
 
-local validators = {
+{
   local this = self,
+
+  schemaField: schemaField,
 
   assertSchemaInteger(value, schema={}, path='$'):: (
     if std.type(value) != 'number' || std.length(std.split(std.toString(value), '.')) != 1 then
@@ -198,9 +200,4 @@ local validators = {
     else
       value
   ),
-};
-
-{
-  schemaField: schemaField,
-  validate: validators.validate,
 }

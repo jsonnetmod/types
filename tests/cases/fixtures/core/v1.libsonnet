@@ -15,7 +15,7 @@ local Namespace = t.objectOf({
   apiVersion: t.const('v1'),
   kind: t.const('Namespace'),
   metadata: ObjectMeta,
-  spec: NamespaceSpec,
+  spec:: NamespaceSpec,
 });
 
 {

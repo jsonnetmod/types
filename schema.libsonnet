@@ -1,115 +1,119 @@
-local v = import './validate.libsonnet';
-
-local getDefaultsFromSchema = function(schema) (
-  if std.objectHasAll(schema, 'properties') then (
-    {
-      [name]: schema.properties[name].default
-      for name in std.objectFieldsAll(schema.properties)
-      if std.objectHasAll(schema.properties[name], 'default')
-    }
-    +
-    {
-      [name]: getDefaultsFromSchema(schema.properties[name])
-      for name in std.objectFieldsAll(schema.properties)
-      if std.objectHasAll(schema.properties[name], 'type') && schema.properties[name].type == 'object'
-    }
-  )
-  else {}
-);
-
-local normalizeSchema = function(schemaOrSchemaType) (
-  if std.objectHasAll(schemaOrSchemaType, v.schemaField) then
-    normalizeSchema(schemaOrSchemaType[v.schemaField])
-  else if !std.isObject(schemaOrSchemaType) then
-    error 'schema must be an object type'
-  else if !std.objectHasAll(schemaOrSchemaType, 'type') then
-    error 'schema must have field `type`'
-  else
-    schemaOrSchemaType
-);
-
-local typeOf = function(schema) { [v.schemaField]:: schema } + getDefaultsFromSchema(schema);
-
-
 {
   local this = self,
 
-  typeOf:: typeOf,
+  fieldSchema:: '__schema__',
 
-  any():: {},
+  normalizeSchema(schemaOrSchemaType):: (
+    assert std.isObject(schemaOrSchemaType) : 'normalizeSchema first parameter should be object, got <%s> %s' % [std.type(schemaOrSchemaType), schemaOrSchemaType];
 
-  const(c):: typeOf({
+    if std.objectHasAll(schemaOrSchemaType, this.fieldSchema) then
+      this.normalizeSchema(schemaOrSchemaType[this.fieldSchema])
+    else if std.objectHasAll(schemaOrSchemaType, 'type') then
+      schemaOrSchemaType
+    else
+      {}
+  ),
+
+  isRequiredField(field, schema):: (
+    std.isObject(schema) && std.objectHasAll(schema, 'required') && std.member(schema.required, field)
+  ),
+
+  getDefaultsFromSchema(schema):: (
+    assert std.isObject(schema) : 'getDefaultsFromSchema first parameter should be object, got <%s> %s' % [std.type(schema), schema];
+
+    if std.objectHasAll(schema, 'properties') then
+      std.foldl(
+        function(defaults, field) (
+          local propDefault = this.getDefaultsFromSchema(schema.properties[field]);
+          if propDefault == null then
+            defaults
+          else
+            if std.isObject(propDefault) && std.length(propDefault) == 0 && this.isRequiredField(field, schema) then
+              defaults
+            else defaults { [field]: propDefault }
+        ),
+        std.objectFieldsAll(schema.properties),
+        {},
+      )
+    else if std.objectHasAll(schema, 'default') then schema.default
+    else null
+  ),
+
+  fromSchema(schema):: (
+    ({ [this.fieldSchema]:: schema })
+    + (
+      local defaults = this.getDefaultsFromSchema(schema);
+      if std.isObject(defaults) then defaults
+      else {}
+    )
+  )
+  ,
+
+  any():: this.fromSchema({}),
+
+  const(c):: this.fromSchema({
     type: std.type(c),
     const: c,
     default: c,
   }),
 
   enum(values):: (
-    if !std.isArray(values) then
-      error 'enum(values), values should be a arrry error'
-    else if std.length(values) == 0 then
-      error 'enum(values), values should contain at least one item'
-    else
-      typeOf({
-        type: std.type(values[0]),
-        enum: values,
-        default: values[0],
-      })
+    assert std.isArray(values) : 'enum first parameter should be a array, got %s' % [std.type(values)];
+    assert std.length(values) : 'enum first parameter should at least one value, got %s' % [std.lenght(values)];
+
+    this.fromSchema({
+      type: std.type(values[0]),
+      enum: values,
+      default: values[0],
+    })
   ),
 
-  string():: typeOf({ type: 'string' }),
+  string():: this.fromSchema({ type: 'string' }),
 
-  number():: typeOf({ type: 'number' }),
+  number():: this.fromSchema({ type: 'number' }),
 
-  integer():: typeOf({ type: 'integer' }),
+  integer():: this.fromSchema({ type: 'integer' }),
 
-  boolean():: typeOf({ type: 'boolean' }),
+  boolean():: this.fromSchema({ type: 'boolean' }),
 
-  tupleOf(itemSchemas):: typeOf(
+  tupleOf(itemSchemas):: this.fromSchema(
     if !std.isArray(itemSchemas) then
       error 'tupleOf(itemSchemas), itemSchemas must be an array'
     else
-      {
-        type: 'array',
-        items: std.map(function(itemSchema) normalizeSchema(itemSchema), itemSchemas),
-      }
+      { type: 'array', items: std.map(function(itemSchema) this.normalizeSchema(itemSchema), itemSchemas) }
   ),
 
-  oneOf(schemas):: typeOf(
-    if !std.isArray(schemas) then
-      error 'oneOf(schemas), schemas must be an array'
-    else
-      {
-        oneOf: std.map(function(s) normalizeSchema(s), schemas),
-      }
+  oneOf(schemas):: this.fromSchema(
+    assert std.isArray(schemas) : 'oneOf first parameter should be a array, got %s' % [std.type(schemas)];
+    { oneOf: std.map(function(s) this.normalizeSchema(s), schemas) }
   ),
 
-  arrayOf(itemSchema):: typeOf({
+  arrayOf(itemSchema):: this.fromSchema({
     type: 'array',
-    items: normalizeSchema(itemSchema),
+    items: this.normalizeSchema(itemSchema),
   }),
 
+  objectOf(properties, additionalSchema=false):: this.fromSchema(
+    (
+      {
+        type: 'object',
+        properties: {
+          [name]: this.normalizeSchema(properties[name])
+          for name in std.objectFieldsAll(properties)
+        },
+        required: std.objectFields(properties),
+      }
+    )
+    +
+    (
+      if additionalSchema then { additionalProperties: this.normalizeSchema(additionalSchema) }
+      else {}
+    ),
+  ),
 
-  objectOf(properties, additionalSchema=false):: typeOf({
+  mapOf(valueSchema, propertyNames=this.string()):: this.fromSchema({
     type: 'object',
-    properties: {
-      [name]: normalizeSchema(properties[name])
-      for name in std.objectFieldsAll(properties)
-    },
-    required: std.objectFields(properties),
-  } + (
-    if (std.isObject(additionalSchema)) then
-      normalizeSchema(additionalSchema)
-    else
-      if additionalSchema then
-        { additionalProperties: additionalSchema }
-      else
-        {}
-  )),
-
-  mapOf(valueSchema, propertyNames=this.string()):: typeOf({
-    type: 'object',
-    additionalProperties: normalizeSchema(valueSchema),
-    propertyNames: normalizeSchema(propertyNames),
+    additionalProperties: this.normalizeSchema(valueSchema),
+    propertyNames: this.normalizeSchema(propertyNames),
   }),
 }
