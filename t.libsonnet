@@ -1,2 +1,1 @@
-(import './validator.libsonnet') +
-(import './schema.libsonnet')
+(import './lib/validator.libsonnet') + (import './lib/schema.libsonnet')

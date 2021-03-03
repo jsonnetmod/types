@@ -46,8 +46,7 @@
       if std.isObject(defaults) then defaults
       else {}
     )
-  )
-  ,
+  ),
 
   any():: this.fromSchema({}),
 
