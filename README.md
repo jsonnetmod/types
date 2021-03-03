@@ -6,8 +6,7 @@ A [jsonnet](https://jsonnet.org/) validation follow [json schema](https://json-s
 
 ## Rule
 
-When hidden field `__schema__` with json schema exists, 
-will validate the object 
+When hidden field `__schema__` with json schema exists, will validate the object
 
 ```jsonnet
 local t = import 'github.com/jsonnetmod/types/t.libsonnet';
@@ -35,3 +34,11 @@ t.validate(Meta {
 })
 ```
 
+## Known Issues
+
+* `$ref` with remote url need native functions:
+    * `fetch(url): string` to fetch remote json schema raw data
+    * `parseJson(json data): {} | []` to parse json schema from raw data
+
+* `pattern` && `patternProperties` native function:
+    * `regexMatch(regex, str: string): bool` in custom jsonnet vm

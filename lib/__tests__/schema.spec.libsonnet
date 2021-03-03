@@ -1,8 +1,8 @@
-local t = import 't.libsonnet';
+local t = import '../schema.libsonnet';
 
 local ObjectMeta = t.objectOf({
   name: t.string(),
-  Namespace:: t.string(),
+  namespace:: t.string(),
   labels:: t.mapOf(t.string()),
   annotations:: t.mapOf(t.string()),
 });
@@ -15,11 +15,15 @@ local Namespace = t.objectOf({
   apiVersion: t.const('v1'),
   kind: t.const('Namespace'),
   metadata: ObjectMeta,
-  spec:: NamespaceSpec,
+  spec: NamespaceSpec,
 });
 
 {
-  ObjectMeta:: ObjectMeta,
-  Namespace:: Namespace,
-  NamespaceSpec:: NamespaceSpec,
+  test_SchemaDefaults():: {
+    actual: Namespace,
+    expect: {
+      apiVersion: 'v1',
+      kind: 'Namespace',
+    },
+  },
 }
