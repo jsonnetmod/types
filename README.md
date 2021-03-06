@@ -34,6 +34,14 @@ t.validate(Meta {
 })
 ```
 
+## JSON-Schema-Test-Suite Covers 
+
+* [x] draft7
+* [x] draft6
+* [ ] draft4
+* [ ] draft3
+
+
 ## Known Issues
 
 * `$ref` with remote url need native functions:
